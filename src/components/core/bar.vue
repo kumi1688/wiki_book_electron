@@ -2,7 +2,7 @@
   <v-container>
     <v-app-bar :clipped-left="$vuetify.breakpoint.lgAndUp" app color="blue darken-3" dark>
       <v-app-bar-nav-icon @click.stop="toggleDrawer"></v-app-bar-nav-icon>
-      <v-toolbar-title style="width: 300px" class="ml-0 pl-4">
+      <v-toolbar-title style="width: 300px" class="ml-0 pl-4" @click="toTitleLayout">
         <span class="hidden-sm-and-down">위키 문서</span>
       </v-toolbar-title>
       <v-text-field
@@ -36,6 +36,10 @@ export default {
   methods: {
     toggleDrawer: function() {
       this.$store.commit("TOGGLE_DRAWER");
+    },
+    toTitleLayout: function() {
+      this.$store.commit("SAVE_BOOK", null);
+      this.$store.commit("TOGGLE_DRAWER", null);
     }
   }
 };

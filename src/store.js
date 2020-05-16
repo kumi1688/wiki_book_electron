@@ -6,12 +6,15 @@ Vue.use(Vuex);
 const store = new Vuex.Store({
     state: {
         drawer: false,
+        book: null,
     },
     mutations: {
         TOGGLE_DRAWER(state) {
-            console.log(state.drawer);
             state.drawer = !state.drawer;
         },
+        SAVE_BOOK(state, payload) {
+            state.book = payload
+        }
     },
 });
 

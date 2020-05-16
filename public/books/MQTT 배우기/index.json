@@ -1,7 +1,21 @@
 {
     "indexList": [
-        "mqtt 소개",
-        "mqtt 이론",
-        "mqtt 실습"
+        {
+            "name": "MQTT 소개",
+            "subIndex": [
+                {
+                    "name": "MQTT 소개"
+                },
+                {
+                    "name": "MQTT 사용처"
+                }
+            ]
+        },
+        {
+            "name": "MQTT 이론"
+        },
+        {
+            "name": "MQTT 실습"
+        }
     ]
 }

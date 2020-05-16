@@ -1,7 +1,21 @@
 {
     "indexList": [
-        "Vue 소개",
-        "Vue 이론",
-        "Vue 실습"
+        {
+            "name": "Vue 소개",
+            "subIndex": [
+                {
+                    "name": "Vue 소개"
+                },
+                {
+                    "name": "Vue 사용처"
+                }
+            ]
+        },
+        {
+            "name": "Vue 이론"
+        },
+        {
+            "name": "Vue 실습"
+        }
     ]
 }

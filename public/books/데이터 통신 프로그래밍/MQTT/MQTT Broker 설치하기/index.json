@@ -1,0 +1,41 @@
+[
+    {
+        "title": "MQTT Broker 설치",
+        "contents": [
+            {
+                "text": [
+                    "이번 장에서는 MQTT Broker를 설치하고 확인하는 법을 살펴본다"
+                ]
+            }
+        ]
+    },
+    {
+        "title": "MQTT Broker 종류",
+        "contents": [
+            {
+                "img": [
+                    "MQTT 종류.PNG"
+                ],
+                "text": [
+                    "MQTT Broker는 현재 다양한 제품들이 있다. 위의 표에서 살펴보면 대략 10개가 넘는 브로커가 있는 것을 볼 수 있다. 위의 브로커들은 모두 MQTT 메시지를 전달하고 전달받을 수 있으므로 어느것을 사용해도 상관없지만 이번 장에서는 Mosquitto를 사용해보도록 한다",
+                    "위의 표에서 MQTT Client 부분은 MQTT를 지원하는 플랫폼들을 나열한 것이다. 현재 사용하고 있는 플랫폼의 MQTT 지원여부는 플랫폼 홈페이지를 확인해보도록 하자"
+                ]
+            }
+        ]
+    },
+    {
+        "title": "MQTT Broker 설치",
+        "contents": [
+            {
+                "terminal": "sudo apt-get update",
+                "text": [
+                    "sudo : 관리자 권한 실행",
+                    "apt-get update: 리눅스 운영체제의 최신 버전을 가져온다"
+                ]
+            },
+            {
+                "terminal": "sudo apt-get install mosquitto"
+            }
+        ]
+    }
+]

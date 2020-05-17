@@ -1,11 +1,13 @@
 <template>
   <v-container>
     <v-row>
+      <!-- <pre><kbd>$ sudo apt-get install mosquitto</kbd></pre> -->
       <v-col cols="12" md="11" v-for="(item,index) in items" :key="index">
         <h1>{{item.title}}</h1>
         <hr />
         <v-container v-if="item.contents">
           <v-container v-for="(content, i) in item.contents" :key="i">
+            <pre v-if="content.terminal"><kbd>$ {{content.terminal}}</kbd></pre>
             <editor
               v-if="content.code"
               :value="readCode(content.code.name)"
@@ -99,5 +101,17 @@ export default {
 <style scoped>
 p {
   font-size: 25px;
+}
+
+pre {
+  width: 100%;
+  background-color: #cfd8dc;
+  border: solid #cfd8dc;
+}
+
+kbd {
+  color: black;
+  background-color: white;
+  font-size: 20px;
 }
 </style>

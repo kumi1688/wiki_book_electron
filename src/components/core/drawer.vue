@@ -3,7 +3,7 @@
   <v-container>
     <v-navigation-drawer :value="drawer" :clipped="$vuetify.breakpoint.lgAndUp" app width="350">
       <v-list dense>
-        <template v-for="item in items">
+        <template v-for="(item,index) in items">
           <v-list-group
             v-if="item.children"
             :key="item.name"
@@ -13,21 +13,23 @@
           >
             <template v-slot:activator>
               <v-list-item-content>
-                <v-list-item-title>{{ item.name }}</v-list-item-title>
+                <v-list-item-title class="pt-2 pb-2">
+                  <h2>{{index}}장 {{ item.name }}</h2>
+                </v-list-item-title>
               </v-list-item-content>
             </template>
-            <v-list-item
-              v-for="(child, i) in item.children"
-              :key="i"
-              link
-              :to="child.to"
-              class="ml-6"
-            >
-              <v-list-item-action v-if="child.icon">
+            <v-list-item v-for="(child, i) in item.children" :key="i" link :to="child.to">
+              <!-- <v-list-item-action v-if="child.icon">
                 <v-icon>{{ child.icon }}</v-icon>
+              </v-list-item-action>-->
+              <v-list-item-action>
+                <h3>{{index}}-{{i}}</h3>
               </v-list-item-action>
+
               <v-list-item-content>
-                <v-list-item-title>{{ child.name }}</v-list-item-title>
+                <v-list-item-title>
+                  <h3>{{ child.name }}</h3>
+                </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list-group>
@@ -36,7 +38,9 @@
               <v-icon>{{ item.icon }}</v-icon>
             </v-list-item-action>
             <v-list-item-content>
-              <v-list-item-title>{{ item.name }}</v-list-item-title>
+              <v-list-item-title class="pt-2 pb-2">
+                <h2>{{index}}장 {{ item.name }}</h2>
+              </v-list-item-title>
             </v-list-item-content>
           </v-list-item>
         </template>
@@ -54,17 +58,21 @@ export default {
   },
   created: function() {
     let items = [];
+    const bookName = this.$store.state.book.name;
     const bookIndexList = this.$store.state.book.indexList;
     items = bookIndexList.map(bookIndex => {
-      console.log(bookIndex);
       return {
         icon: "mdi-chevron-up",
         model: false,
         "icon-alt": "mdi-chevron-down",
         name: bookIndex.name,
         children: bookIndex.subIndex
-          ? bookIndex.subIndex.map(subIndex => {
-              return { ...subIndex, icon: "mdi-view-dashboard" };
+          ? bookIndex.subIndex.map((subIndex, i) => {
+              return {
+                name: subIndex.name,
+                icon: "mdi-view-dashboard",
+                to: `/book/${bookName}-${bookIndex.name}-${subIndex.name}`
+              };
             })
           : null
       };

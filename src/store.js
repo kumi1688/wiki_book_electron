@@ -10,7 +10,11 @@ const store = new Vuex.Store({
     },
     mutations: {
         TOGGLE_DRAWER(state) {
-            state.drawer = !state.drawer;
+            if (!state.book) return;
+            state.drawer = !state.drawer
+        },
+        SET_DRAWER(state, payload) {
+            state.drawer = payload
         },
         SAVE_BOOK(state, payload) {
             state.book = payload

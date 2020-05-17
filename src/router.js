@@ -9,11 +9,15 @@ const routes = [
         component: () => import("./components/dashboard.vue"),
         children: [
             {
-                name: "books",
+                name: "bookContainer",
                 path: "",
-                component: () => import("./components/books/books.vue"),
+                component: () => import("./components/books/bookContainer.vue"),
             },
-
+            {
+                name: 'bookComponent',
+                path: 'book/:data',
+                component: () => import('./components/books/bookComponent.vue')
+            }
         ],
     },
 ];

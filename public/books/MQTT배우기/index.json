@@ -12,7 +12,15 @@
             ]
         },
         {
-            "name": "MQTT 이론"
+            "name": "MQTT 이론",
+            "subIndex": [
+                {
+                    "name": "MQTT 개론"
+                },
+                {
+                    "name": "MQTT 세부 이론"
+                }
+            ]
         },
         {
             "name": "MQTT 실습"

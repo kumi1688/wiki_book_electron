@@ -21,16 +21,17 @@ export default {
   },
   created: function() {
     const result = path.join(__static, "/books");
-    let bookList = fs.readdirSync(path.join(__static, "/books"), {
-      withFileTypes: true
-    });
+    let bookList = fs.readdirSync(path.join(__static, "/books"));
+
     let indexList = bookList.map((dir, i) => {
-      if (dir.isDirectory()) {
-        const url = path.join(__static, `/books/${dir.name}/index.json`);
-        const rawData = fs.readFileSync(url);
-        const indexList = JSON.parse(rawData);
-        bookList[i].indexList = indexList.indexList;
-      }
+      const url = path.join(__static, `/books/${dir}/index.json`);
+
+      const rawData = fs.readFileSync(url);
+      const indexList = JSON.parse(rawData);
+      bookList[i] = {
+        name: bookList[i],
+        indexList: indexList.indexList
+      };
     });
     this.books = bookList;
   },
@@ -41,7 +42,7 @@ export default {
         name: book.name,
         indexList: book.indexList
       });
-      this.$store.commit("TOGGLE_DRAWER");
+      this.$store.commit("SET_DRAWER", true);
     }
   }
 };

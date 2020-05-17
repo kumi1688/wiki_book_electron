@@ -2,10 +2,20 @@
   <v-container>
     <v-row>
       <v-col cols="12" md="11" v-for="(item,index) in items" :key="index">
-        <h2>{{item.title}}</h2>
+        <h1>{{item.title}}</h1>
         <hr />
         <v-container v-if="item.contents">
           <v-container v-for="(content, i) in item.contents" :key="i">
+            <editor
+              v-if="content.code"
+              :value="readCode(content.code.name)"
+              @init="editorInit"
+              :lang="content.code.lang"
+              :theme="theme"
+              width="1300"
+              height="350"
+            />
+            <h2 v-if="content.code">{{readCode(content.code.name).length}}</h2>
             <v-img v-for="(img, j) in content.img" :key="j" :src="getImage(img)" />
             <p v-for="(txt, k) in content.text" :key="k">{{txt}}</p>
           </v-container>
@@ -20,6 +30,9 @@ import fs, { readFileSync } from "fs";
 import path from "path";
 
 export default {
+  components: {
+    editor: require("vue2-ace-editor")
+  },
   watch: {
     $route: {
       immediate: true,
@@ -32,10 +45,11 @@ export default {
   data: function() {
     return {
       data: null,
+      theme: "chrome",
       items: [
         {
           title: "현재 텍스트가 존재하지 않습니다",
-          text: "가을하늘"
+          text: null
         }
       ]
     };
@@ -56,6 +70,27 @@ export default {
       return path.join(
         `/books/${routerPath[0]}/${routerPath[1]}/${routerPath[2]}/${imgName}`
       );
+    },
+    editorInit: function(editor) {
+      require("brace/ext/language_tools"); //language extension prerequsite...
+      require("brace/mode/html");
+      require("brace/mode/javascript"); //language
+      require("brace/mode/less");
+      require("brace/snippets/javascript"); //snippet
+      require("brace/theme/chrome");
+      editor.setOptions({
+        fontSize: "20pt"
+      });
+    },
+    readCode: function(codeName) {
+      const routerPath = this.$route.params.data.split("/")[0].split("-");
+      const data = fs.readFileSync(
+        path.join(
+          __static,
+          `/books/${routerPath[0]}/${routerPath[1]}/${routerPath[2]}/${codeName}`
+        )
+      );
+      return data.toString();
     }
   }
 };

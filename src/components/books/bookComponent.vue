@@ -1,7 +1,15 @@
 <template>
   <v-container>
     <v-row>
-      <!-- <pre><kbd>$ sudo apt-get install mosquitto</kbd></pre> -->
+      <v-col cols="12" md="11" class="indexWrapper">
+        <h1>목차</h1>
+        <ol v-for="(item, index) in items" :key="index">
+          <h2>
+            {{index}}.
+            {{item.title}}
+          </h2>
+        </ol>
+      </v-col>
       <v-col cols="12" md="11" v-for="(item,index) in items" :key="index">
         <h1>{{item.title}}</h1>
         <hr />
@@ -113,5 +121,9 @@ kbd {
   color: black;
   background-color: white;
   font-size: 20px;
+}
+
+.indexWrapper {
+  border: black solid 2px;
 }
 </style>

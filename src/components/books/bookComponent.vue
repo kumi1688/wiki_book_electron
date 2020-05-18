@@ -1,6 +1,6 @@
 <template>
   <v-container>
-    <v-row>
+    <v-row justify="center">
       <v-col cols="12" md="11" class="indexWrapper">
         <h1>목차</h1>
         <ol v-for="(item, index) in items" :key="index">
@@ -31,6 +31,9 @@
           </v-container>
         </v-container>
       </v-col>
+      <v-col cols="12" md="11">
+        <book-editor />
+      </v-col>
     </v-row>
   </v-container>
 </template>
@@ -38,10 +41,12 @@
 <script>
 import fs, { readFileSync } from "fs";
 import path from "path";
+import bookEditor from "./bookEditor";
 
 export default {
   components: {
-    editor: require("vue2-ace-editor")
+    editor: require("vue2-ace-editor"),
+    "book-editor": bookEditor
   },
   watch: {
     $route: {

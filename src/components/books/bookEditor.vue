@@ -2,6 +2,12 @@
   <v-container>
     <v-container>
       <v-row justify="center">
+        <!-- <drag
+          class="drag"
+          image="https://upload.wikimedia.org/wikipedia/commons/3/3e/Insert-file.svg"
+          :transfer-data="{ draggable }"
+        >{{ draggable }}</drag>-->
+
         <v-btn v-if="!this.isContentAdd" color="green">
           <v-icon @click="contentAdd(true)">mdi-plus</v-icon>
         </v-btn>
@@ -58,7 +64,16 @@
       <v-row justify="center">
         <h2 v-if="!editorData.editorType" class="mt-4">새로 입력할 항목의 종류를 선택해주세요</h2>
         <v-textarea v-else-if="editorData.editorType==='text'" outlined class="mt-4"></v-textarea>
-        <h2 v-else-if="editorData.editorType==='img'">img</h2>
+        <drop v-else-if="editorData.editorType==='img'" class="drop" @drop="handleDrop">
+          <v-container>
+            <h2>파일을 끌어와주세요</h2>
+            <v-img :src="picture" />
+          </v-container>
+          <v-container>
+            <!-- <v-img :src="editorData.img" /> -->
+          </v-container>
+        </drop>
+
         <h2 v-else-if="editorData.editorType==='code'">code</h2>
 
         <pre v-else-if="editorData.editorType==='terminal'"><kbd>$ 야호</kbd></pre>
@@ -77,6 +92,9 @@
 </template>
 
 <script>
+import picture from "../../../public/images.png";
+import fs from "fs";
+
 export default {
   methods: {
     contentAdd: function(payload) {
@@ -94,10 +112,28 @@ export default {
       if (type === "newIndex") {
         this.editorData.editorType = null;
       }
+    },
+    handleDrop(data, event) {
+      const dt = event.dataTransfer;
+      const files = dt.files;
+      console.log(files);
+
+      const fileBuffer = Buffer.from(files, "base64");
+      fs.writeFileSync(`${files[0].name}`, fileBuffer, "binary");
+      console.log(fileBuffer);
+      // const result = fs.readFileSync(files);
+      // console.log(result);
+
+      // fs.writeFileSync(`${files[0].name}`, files[0]);
+
+      // alert(`You dropped with data: ${JSON.stringify(data)}`);
     }
   },
   data: function() {
     return {
+      picture,
+      content: null,
+      draggable: "Drag Me",
       isContentAdd: false,
       editorData: {
         type: null,
@@ -123,5 +159,32 @@ kbd {
   color: black;
   background-color: white;
   font-size: 20px;
+}
+
+.drag,
+.drop {
+  font-family: sans-serif;
+  display: inline-block;
+  border-radius: 5px;
+  background: #ccc;
+  position: relative;
+  padding: 5px;
+  margin-top: 20px;
+  text-align: center;
+  vertical-align: top;
+}
+
+.drag {
+  color: #fff;
+  cursor: move;
+  background: #777;
+  border-right: 2px solid #555;
+  border-bottom: 2px solid #555;
+}
+
+.drop {
+  background: #eee;
+  border-top: 2px solid #ccc;
+  border-left: 2px solid #ccc;
 }
 </style>

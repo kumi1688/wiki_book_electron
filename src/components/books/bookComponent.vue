@@ -3,18 +3,18 @@
     <v-row justify="center">
       <v-col cols="12" md="11" class="indexWrapper">
         <h1>목차</h1>
-        <ol v-for="(item, index) in items" :key="index">
+        <ol v-for="(item, index) in items" :key="index + 'A'">
           <h2>
             {{index}}.
             {{item.title}}
           </h2>
         </ol>
       </v-col>
-      <v-col cols="12" md="11" v-for="(item,index) in items" :key="index">
+      <v-col cols="12" md="11" v-for="(item,index) in items" :key="index + 'B'">
         <h1>{{item.title}}</h1>
         <hr />
         <v-container v-if="item.contents">
-          <v-container v-for="(content, i) in item.contents" :key="i">
+          <v-container v-for="(content, index) in item.contents" :key="index + 'C'">
             <pre v-if="content.terminal"><kbd>$ {{content.terminal}}</kbd></pre>
             <editor
               v-if="content.code"
@@ -26,13 +26,13 @@
               height="350"
             />
             <h2 v-if="content.code">{{readCode(content.code.name).length}}</h2>
-            <v-img v-for="(img, j) in content.img" :key="j" :src="getImage(img)" />
-            <p v-for="(txt, k) in content.text" :key="k">{{txt}}</p>
+            <v-img v-for="(img, index) in content.img" :key="index + 'D'" :src="getImage(img)" />
+            <p v-for="(txt, index) in content.text" :key="index+'E'">{{txt}}</p>
           </v-container>
         </v-container>
       </v-col>
       <v-col cols="12" md="11">
-        <book-editor />
+        <book-editor @addData="addData" />
       </v-col>
     </v-row>
   </v-container>
@@ -80,6 +80,7 @@ export default {
       );
       this.items = JSON.parse(result);
     },
+    addData: function() {},
     getImage: function(imgName) {
       const routerPath = this.$route.params.data.split("/")[0].split("-");
       return path.join(

@@ -12,17 +12,34 @@
     </v-container>
     <v-container v-if="isContentAdd">
       <v-container v-if="editorData.title">
-        <h2>{{editorData.title}}</h2>
+        <h1>{{editorData.title}}</h1>
+        <hr />
       </v-container>
 
-      <v-container v-for="(img, index) in editorData.img" :key="index">
-        <v-row align="center">
-          <v-btn class="mr-5" @click="removeImage(index)">이미지 제거</v-btn>
-          <v-img :src="img" />
+      <v-container v-for="(content, index) in editorContents" :key="index+'A'">
+        <v-row justify="start" align="center">
+          <v-img v-if="content.type === 'img'" :src="content.value" />
+          <p
+            v-if="content.type==='text'"
+            :style="{'fontSize': '25px', 'width': '85%'}"
+          >{{content.value}}</p>
+          <editor
+            v-if="content.type === 'code'"
+            :value="content.value"
+            @init="editorInit"
+            :lang="content.lang"
+            theme="chrome"
+            width="1300"
+            height="350"
+          />
+          <v-col>
+            <v-select label="언어 타입 선택" :items="langs" v-model="content.lang" />
+            <v-btn class="ml-10" color="orange" large @click="removeImage(index)">삭제하기</v-btn>
+          </v-col>
         </v-row>
       </v-container>
 
-      <v-container v-for="(code, index) in editorData.code" :key="index">
+      <!-- <v-container v-for="(code, index) in editorData.code" :key="index +'B'">
         <editor
           :value="code.value"
           @init="editorInit"
@@ -31,59 +48,47 @@
           width="1300"
           height="350"
         />
-      </v-container>
+      </v-container>-->
     </v-container>
-    <v-container v-if="isContentAdd">
+
+    <v-container v-if="isContentAdd && editorData.editorType==='newIndex'">
+      <v-text-field
+        class="mt-5 mb-5 pt-5 pb-5"
+        label="새 목차의 제목을 입력해 주세요 (제목 완성 시 오른쪽 더하기 버튼 또는 엔터키 누르기)"
+        single-line
+        persistent-hint
+        hint="새 목차의 제목을 입력해 주세요 (제목 완성 시 오른쪽 더하기 버튼 또는 엔터키 누르기)"
+        v-model="editorData.title"
+        append-outer-icon="mdi-plus"
+        @click:append-outer="editorInput('newIndex')"
+        @keyup.enter="editorInput('newIndex')"
+      />
+    </v-container>
+
+    <v-container v-if="isContentAdd && isTitleAdded">
       <v-row justify="center">
         <v-checkbox
+          v-for="(checkBox, index) in checkBoxes"
+          :key="index + 'C'"
           class="mr-2"
           v-model="editorData.editorType"
-          label="텍스트"
-          color="indigo"
-          value="text"
-          hide-details
-        ></v-checkbox>
-        <v-checkbox
-          class="mr-2"
-          v-model="editorData.editorType"
-          label="이미지"
+          :label="checkBox.label"
           color="info"
-          value="img"
+          :value="checkBox.value"
           hide-details
-        ></v-checkbox>
-        <v-checkbox
-          class="mr-2"
-          v-model="editorData.editorType"
-          label="코드"
-          color="success"
-          value="code"
-          hide-details
-        ></v-checkbox>
-        <v-checkbox
-          class="mr-2"
-          v-model="editorData.editorType"
-          label="터미널"
-          color="orange"
-          value="terminal"
-          hide-details
-        ></v-checkbox>
-        <v-checkbox
-          v-model="editorData.editorType"
-          label="새로운 목차"
-          color="green"
-          value="newIndex"
-          hide-details
-        ></v-checkbox>
+        />
       </v-row>
       <v-row justify="center">
         <h2 v-if="!editorData.editorType" class="mt-4">새로 입력할 항목의 종류를 선택해주세요</h2>
-        <v-textarea
-          v-else-if="editorData.editorType==='text'"
-          outlined
-          class="mt-4"
-          v-model="editorData.text"
-          @keyup.enter="editorInput('text')"
-        />
+        <v-container v-else-if="editorData.editorType==='text'">
+          <v-textarea
+            outlined
+            class="mt-4"
+            v-model="editorData.text"
+            :style="{'fontSize': '25px'}"
+          />
+          <v-btn color="info" large @click="editorInput('text')">텍스트 작성 완료하기</v-btn>
+        </v-container>
         <drop v-else-if="editorData.editorType==='img'" class="drop" @drop="handleDrop">
           <v-container>
             <h2>파일을 끌어와주세요</h2>
@@ -93,7 +98,7 @@
 
         <v-container v-else-if="editorData.editorType==='code'">
           <v-row justify="center" align="center">
-            <v-btn class="ml-3 mr-3" @click="editorData.code.push('입력해주세요')">직접 입력</v-btn>
+            <v-btn class="ml-3 mr-3" @click="setCodeDataManually">직접 입력</v-btn>
             <drop class="drop ml-3 mr-3" @drop="handleDrop">
               <v-container>
                 <h2>파일을 끌어와주세요</h2>
@@ -102,19 +107,7 @@
           </v-row>
         </v-container>
 
-        <pre v-else-if="editorData.editorType==='terminal'"><kbd>$ 야호</kbd></pre>
-        <v-text-field
-          v-else-if="editorData.editorType==='newIndex'"
-          class="mt-5 mb-5 pt-5 pb-5"
-          label="새 목차의 제목을 입력해 주세요 (제목 완성 시 오른쪽 더하기 버튼 또는 엔터키 누르기)"
-          single-line
-          persistent-hint
-          hint="새 목차의 제목을 입력해 주세요 (제목 완성 시 오른쪽 더하기 버튼 또는 엔터키 누르기)"
-          v-model="editorData.title"
-          append-outer-icon="mdi-plus"
-          @click:append-outer="editorInput('newIndex')"
-          @keyup.enter="editorInput('newIndex')"
-        />
+        <pre v-else-if="editorData.editorType==='terminal'"><kbd>$ 입력하기</kbd></pre>
       </v-row>
     </v-container>
   </v-container>
@@ -129,7 +122,7 @@ export default {
     contentAdd: function(payload) {
       this.isContentAdd = payload;
       this.editorData = {
-        editorType: null,
+        editorType: "newIndex",
         title: null,
         text: null,
         img: [],
@@ -139,31 +132,52 @@ export default {
     },
     editorInput: function(type) {
       if (type === "newIndex") {
+        this.isTitleAdded = true;
         this.editorData.editorType = null;
+      } else if (type === "text") {
+        this.editorContents.push({
+          type: "text",
+          value: this.editorData.text
+        });
+        this.editorData.text = null;
       }
     },
-    setPreviewImage(e) {
-      this.editorData.img = [...this.editorData.img, e.target.result];
+    setImage(e) {
+      this.editorContents.push({
+        type: "img",
+        value: e.target.result
+      });
+    },
+    removeImage(index) {
+      this.editorContents = [
+        ...this.editorContents.slice(0, index),
+        ...this.editorContents.slice(index + 1)
+      ];
+    },
+    setCodeDataManually() {
+      this.editorContents.push({
+        type: "code",
+        lang: "javascript",
+        value: ""
+      });
     },
     setCodeData(e) {
       let extension = this.editorData.fileName.split(".");
       extension = extension[extension.length - 1];
 
-      this.editorData.code = [
-        ...this.editorData.code,
-        {
-          lang: extension,
-          value: e.target.result
-        }
-      ];
+      this.editorContents.push({
+        type: "code",
+        lang: extension,
+        value: e.target.result
+      });
     },
-    readAndPreview(file) {
+    readFile(file) {
       // `file.name` 형태의 확장자 규칙에 주의하세요
       if (/\.(jpe?g|png|gif)$/i.test(file.name)) {
         const reader = new FileReader();
 
         this.editorData.fileName = file.name;
-        reader.onload = this.setPreviewImage;
+        reader.onload = this.setImage;
         reader.readAsDataURL(file);
       } else if (/\.(py|js|json|txt|c|cpp)$/i.test(file.name)) {
         const reader = new FileReader();
@@ -178,23 +192,28 @@ export default {
       const files = dt.files;
 
       if (files.length > 1) {
-        [].forEach.call(files, this.readAndPreview);
+        [].forEach.call(files, this.readFile);
       } else {
-        this.readAndPreview(files[0]);
+        this.readFile(files[0]);
       }
     },
-    removeImage(index) {
-      this.editorData.img = [
-        ...this.editorData.img.slice(0, index),
-        ...this.editorData.img.slice(index + 1)
-      ];
-    },
+
     editorInit: function(editor) {
       require("brace/ext/language_tools"); //language extension prerequsite...
       require("brace/mode/html");
       require("brace/mode/javascript"); //language
+      require("brace/mode/c_cpp");
+      require("brace/mode/java");
+      require("brace/mode/json");
+      require("brace/mode/python");
       require("brace/mode/less");
+
       require("brace/snippets/javascript"); //snippet
+      require("brace/snippets/json");
+      require("brace/snippets/c_cpp");
+      require("brace/snippets/java");
+      require("brace/snippets/python");
+      require("brace/snippets/html");
       require("brace/theme/chrome");
       editor.setOptions({
         fontSize: "20pt"
@@ -207,9 +226,16 @@ export default {
   data: function() {
     return {
       picture,
-      content: null,
-      draggable: "Drag Me",
+      isTitleAdded: false,
       isContentAdd: false,
+      checkBoxes: [
+        { label: "텍스트", value: "text" },
+        { label: "이미지", value: "img" },
+        { label: "코드", value: "code" },
+        { label: "터미널", value: "terminal" }
+      ],
+      langs: ["javascript", "java", "c_cpp", "python", "html", "json"],
+      editorContents: [],
       editorData: {
         type: null,
         title: null,

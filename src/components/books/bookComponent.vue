@@ -13,22 +13,23 @@
       <v-col cols="12" md="11" v-for="(item,index) in items" :key="index + 'B'">
         <h1>{{item.title}}</h1>
         <hr />
-        <v-container v-if="item.contents">
-          <v-container v-for="(content, index) in item.contents" :key="index + 'C'">
-            <pre v-if="content.terminal"><kbd>$ {{content.terminal}}</kbd></pre>
-            <editor
-              v-if="content.code"
-              :value="readCode(content.code.name)"
-              @init="editorInit"
-              :lang="content.code.lang"
-              :theme="theme"
-              width="1300"
-              height="350"
-            />
-            <h2 v-if="content.code">{{readCode(content.code.name).length}}</h2>
-            <v-img v-for="(img, index) in content.img" :key="index + 'D'" :src="getImage(img)" />
-            <p v-for="(txt, index) in content.text" :key="index+'E'">{{txt}}</p>
-          </v-container>
+
+        <v-container v-for="(content, index) in item.contents" :key="index + 'C'">
+          <pre v-if="content.type === 'terminal'"><kbd>$ {{content.value}}</kbd></pre>
+          <editor
+            v-if="content.type ==='code'"
+            :value="readCode(content.value)"
+            @init="editorInit"
+            :lang="getLanguage(content)"
+            :theme="theme"
+            width="1300"
+            height="350"
+          />
+          <!-- <h2 v-if="content.type ==='code'">{{readCode(content.value).length}}</h2> -->
+          <v-img v-if="content.type === 'img'" :src="getImage(content.value)" />
+          <p v-if="content.type ==='text'">{{content.value}}</p>
+
+          <!-- <p v-for="(txt, index) in content.text" :key="index+'E'">{{txt}}</p> -->
         </v-container>
       </v-col>
       <v-col cols="12" md="11">
@@ -70,6 +71,25 @@ export default {
     };
   },
   methods: {
+    getLanguage: function(content) {
+      // ["javascript", "java", "c_cpp", "python", "html", "json"],
+      // } else if (/\.(py|js|json|txt|c|cpp)$/i.test(file.name)) {
+      switch (content.lang) {
+        case "py":
+          return "python";
+        case "c":
+        case "cpp":
+          return "c_cpp";
+        case "js":
+          return "javascript";
+        case "json":
+          return "json";
+        case "txt":
+          return "txt";
+        case "html":
+          return "html";
+      }
+    },
     getData: function() {
       const routerPath = this.$route.params.data.split("/")[0].split("-");
       const result = fs.readFileSync(
@@ -81,7 +101,13 @@ export default {
       this.items = JSON.parse(result);
     },
     addNewBookContent: function(payload) {
-      console.log(payload);
+      payload.contents = payload.contents.map(content => {
+        if (content.rawData) delete content.rawData;
+        return content;
+      });
+      this.items = [...this.items, payload];
+
+      this.saveBook();
     },
     getImage: function(imgName) {
       const routerPath = this.$route.params.data.split("/")[0].split("-");
@@ -109,6 +135,16 @@ export default {
         )
       );
       return data.toString();
+    },
+    saveBook: function() {
+      const routerPath = this.$route.params.data.split("/")[0].split("-");
+      fs.writeFileSync(
+        path.join(
+          __static,
+          `/books/${routerPath[0]}/${routerPath[1]}/${routerPath[2]}/index.json`
+        ),
+        JSON.stringify(this.items)
+      );
     }
   }
 };

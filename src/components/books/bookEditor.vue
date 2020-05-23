@@ -18,28 +18,28 @@
 
       <v-container v-for="(content, index) in editorContents" :key="index+'A'">
         <v-row justify="center" align="center">
-          <v-img v-if="content.type === 'img'" :src="content.value" />
+          <v-img v-if="content.type === 'img'" :src="content.rawData" />
           <p
             v-if="content.type==='text'"
             :style="{'fontSize': '25px', 'width': '85%'}"
           >{{content.value}}</p>
           <editor
             v-if="content.type === 'code'"
-            :value="content.value"
+            :value="content.rawData"
             @init="editorInit"
-            :lang="content.lang"
+            :lang="getLanguage(content)"
             theme="chrome"
             width="1300"
             height="350"
           />
           <pre v-if="content.type === 'terminal'"><kbd>$ {{content.value}}</kbd></pre>
           <v-col>
-            <v-select
+            <!-- <v-select
               v-if="content.type === 'code'"
               label="언어 타입 선택"
               :items="langs"
               v-model="content.lang"
-            />
+            />-->
             <v-btn class="ml-10" color="orange" large @click="removeContent(index)">삭제하기</v-btn>
           </v-col>
         </v-row>
@@ -123,9 +123,32 @@
 
 <script>
 import picture from "../../../public/images.png";
+import fs from "fs";
+import path from "path";
+import { v4 as uuidv4 } from "uuid";
 
 export default {
+  watch: {},
   methods: {
+    getLanguage: function(content) {
+      // ["javascript", "java", "c_cpp", "python", "html", "json"],
+      // } else if (/\.(py|js|json|txt|c|cpp)$/i.test(file.name)) {
+      switch (content.lang) {
+        case "py":
+          return "python";
+        case "c":
+        case "cpp":
+          return "c_cpp";
+        case "js":
+          return "javascript";
+        case "json":
+          return "json";
+        case "txt":
+          return "txt";
+        case "html":
+          return "html";
+      }
+    },
     contentAdd: function(payload) {
       this.isContentAdd = payload;
       this.editorData = {
@@ -138,7 +161,21 @@ export default {
       };
     },
     contentAddComplete: function() {
-      this.$emit("addNewBookContent", this.editorContents);
+      this.$emit("addNewBookContent", {
+        title: this.editorData.title,
+        contents: this.editorContents
+      });
+      this.editorData = {
+        type: null,
+        title: null,
+        text: null,
+        img: [],
+        terminal: null,
+        code: null,
+        fileName: ""
+      };
+      this.editorContents = [];
+      this.isContentAdd = false;
     },
     editorInput: function(type) {
       if (type === "newIndex") {
@@ -159,9 +196,24 @@ export default {
       this.editorData.editorType = null;
     },
     setImage(e) {
+      // const prefix = 'data:image/png;base64,'
+      const extension = e.target.result.split(",")[0];
+      const data = e.target.result.split(",")[1];
+
+      const routerPath = this.$route.params.data.split("/")[0].split("-");
+      const url = path.join(
+        __static,
+        `/books/${routerPath[0]}/${routerPath[1]}/${routerPath[2]}`
+      );
+
+      let buff = Buffer.from(e.target.result.split(",")[1], "base64");
+      const id = uuidv4();
+
+      fs.writeFileSync(`${url}/${id}.PNG`, buff);
       this.editorContents.push({
         type: "img",
-        value: e.target.result
+        value: `${id}.PNG`,
+        rawData: e.target.result
       });
     },
     removeContent(index) {
@@ -178,13 +230,24 @@ export default {
       });
     },
     setCodeData(e) {
+      console.log(e.target.result);
       let extension = this.editorData.fileName.split(".");
       extension = extension[extension.length - 1];
+
+      const routerPath = this.$route.params.data.split("/")[0].split("-");
+      const url = path.join(
+        __static,
+        `/books/${routerPath[0]}/${routerPath[1]}/${routerPath[2]}`
+      );
+
+      const id = uuidv4();
+      fs.writeFileSync(`${url}/${id}.${extension}`, e.target.result);
 
       this.editorContents.push({
         type: "code",
         lang: extension,
-        value: e.target.result
+        value: `${id}.${extension}`,
+        rawData: e.target.result
       });
     },
     readFile(file) {
@@ -198,6 +261,7 @@ export default {
       } else if (/\.(py|js|json|txt|c|cpp)$/i.test(file.name)) {
         const reader = new FileReader();
 
+        console.log(file);
         this.editorData.fileName = file.name;
         reader.onload = this.setCodeData;
         reader.readAsText(file);

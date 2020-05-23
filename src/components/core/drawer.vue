@@ -24,8 +24,7 @@
               v-for="(child, subIndex) in item.children"
               :key="subIndex"
               link
-              :to="child.to"
-              @click="addNewSubIndex(index, subIndex)"
+              @click="clickItem(index, subIndex, child)"
               @contextmenu.prevent="(e)=>{
               editIndex = index
               editSubIndex= subIndex
@@ -89,16 +88,22 @@
       <li>
         <a @click="removeIndex">제거</a>
       </li>
+      <li>
+        <a @click="saveBook">메뉴 저장</a>
+      </li>
     </vue-context>
     <edit-dialog
       v-if="editDialog"
       @closeDialog="closeDialog"
-      :type="editSubIndex ? 'subIndex': 'index'"
+      :type="editSubIndex !== -1 ? 'subIndex': 'index'"
     />
   </v-container>
 </template>
 
 <script>
+import fs from "fs";
+import path from "path";
+import { v4 as uuidv4 } from "uuid";
 import EditDialog from "../dialogs/editDialog";
 import { VueContext } from "vue-context";
 import "vue-context/dist/css/vue-context.css";
@@ -142,7 +147,7 @@ export default {
       loading: false,
       editDialog: false,
       editIndex: null,
-      editSubIndex: null,
+      editSubIndex: -1,
       contextData: {
         index: null,
         value: null
@@ -153,10 +158,11 @@ export default {
     items: {
       deep: true,
       handler: function(from, to) {
-        console.log(from, to);
+        // console.log(from, to);
       }
     }
   },
+  beforeDestroy: function() {},
   methods: {
     addPlusIndexButton(items) {
       const data = {
@@ -171,14 +177,6 @@ export default {
       });
       return items;
     },
-    addSubIndex(index) {
-      const bookName = this.$store.state.book.name;
-      const bookIndexList = this.$store.state.book.indexList;
-      this.items[index].children.push({});
-      const data = {
-        name: "새로운 세부 목차"
-      };
-    },
     removeIndex: function() {
       this.items = [
         ...this.items.slice(0, this.editIndex),
@@ -186,19 +184,37 @@ export default {
       ];
     },
     closeDialog: function(payload) {
-      if (payload.value && !this.editSubIndex)
+      if (payload.value && this.editSubIndex === -1)
         this.items[this.editIndex].name = payload.value;
       else
         this.items[this.editIndex].children[this.editSubIndex].name =
           payload.value;
       this.editIndex = null;
-      this.editSubIndex = null;
+      this.editSubIndex = -1;
       this.editDialog = false;
     },
     openBookDialog: function() {
       this.editDialog = true;
     },
-
+    saveBook: function() {
+      const bookName = this.$store.state.book.name;
+      const url = path.join(__static, `/books/${bookName}`);
+      const data = {
+        indexList: this.items
+          .filter(item => item["name"] !== "새로운 항목")
+          .map(item => {
+            return {
+              name: item.name,
+              subIndex: item.children
+                .filter(ch => ch["name"] !== "세부 목차 추가하기")
+                .map(ch => {
+                  return { name: ch["name"] };
+                })
+            };
+          })
+      };
+      fs.writeFileSync(`${url}/index.json`, JSON.stringify(data));
+    },
     addNewIndex: function() {
       this.items = this.items.concat({
         icon: "mdi-chevron-up",
@@ -208,6 +224,7 @@ export default {
       this.items = this.addPlusIndexButton(this.items);
     },
     addNewSubIndex: function(index, subIndex) {
+      this.loading = true;
       const bookName = this.$store.state.book.name;
       // 세부 항목 추가는 빼놓기
       const lastItem = this.items[index].children[
@@ -221,6 +238,15 @@ export default {
         },
         lastItem
       ];
+      this.loading = false;
+      console.log(this.items[index].children);
+    },
+    clickItem(index, subIndex, child) {
+      if (child.type === "subIndex") {
+        this.addNewSubIndex(index, subIndex);
+        return;
+      }
+      this.$router.push(child.to);
     }
   }
 };

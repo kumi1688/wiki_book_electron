@@ -15,6 +15,7 @@
   "dependencies": {
     "core-js": "^3.6.4",
     "raw-loader": "^4.0.1",
+    "uuid": "^8.1.0",
     "vue": "^2.6.11",
     "vue-context": "^5.1.0",
     "vue-drag-drop": "^1.1.4",

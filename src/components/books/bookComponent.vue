@@ -32,7 +32,7 @@
         </v-container>
       </v-col>
       <v-col cols="12" md="11">
-        <book-editor @addData="addData" />
+        <book-editor @addNewBookContent="addNewBookContent" />
       </v-col>
     </v-row>
   </v-container>
@@ -80,7 +80,9 @@ export default {
       );
       this.items = JSON.parse(result);
     },
-    addData: function() {},
+    addNewBookContent: function(payload) {
+      console.log(payload);
+    },
     getImage: function(imgName) {
       const routerPath = this.$route.params.data.split("/")[0].split("-");
       return path.join(

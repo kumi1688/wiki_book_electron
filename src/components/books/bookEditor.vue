@@ -17,7 +17,7 @@
       </v-container>
 
       <v-container v-for="(content, index) in editorContents" :key="index+'A'">
-        <v-row justify="start" align="center">
+        <v-row justify="center" align="center">
           <v-img v-if="content.type === 'img'" :src="content.value" />
           <p
             v-if="content.type==='text'"
@@ -32,23 +32,18 @@
             width="1300"
             height="350"
           />
+          <pre v-if="content.type === 'terminal'"><kbd>$ {{content.value}}</kbd></pre>
           <v-col>
-            <v-select label="언어 타입 선택" :items="langs" v-model="content.lang" />
-            <v-btn class="ml-10" color="orange" large @click="removeImage(index)">삭제하기</v-btn>
+            <v-select
+              v-if="content.type === 'code'"
+              label="언어 타입 선택"
+              :items="langs"
+              v-model="content.lang"
+            />
+            <v-btn class="ml-10" color="orange" large @click="removeContent(index)">삭제하기</v-btn>
           </v-col>
         </v-row>
       </v-container>
-
-      <!-- <v-container v-for="(code, index) in editorData.code" :key="index +'B'">
-        <editor
-          :value="code.value"
-          @init="editorInit"
-          :lang="code.lang"
-          theme="chrome"
-          width="1300"
-          height="350"
-        />
-      </v-container>-->
     </v-container>
 
     <v-container v-if="isContentAdd && editorData.editorType==='newIndex'">
@@ -56,8 +51,6 @@
         class="mt-5 mb-5 pt-5 pb-5"
         label="새 목차의 제목을 입력해 주세요 (제목 완성 시 오른쪽 더하기 버튼 또는 엔터키 누르기)"
         single-line
-        persistent-hint
-        hint="새 목차의 제목을 입력해 주세요 (제목 완성 시 오른쪽 더하기 버튼 또는 엔터키 누르기)"
         v-model="editorData.title"
         append-outer-icon="mdi-plus"
         @click:append-outer="editorInput('newIndex')"
@@ -66,6 +59,7 @@
     </v-container>
 
     <v-container v-if="isContentAdd && isTitleAdded">
+      <h2 :style="{'textAlign':'center'}" class="mt-4">새로 입력할 항목의 종류를 선택해주세요</h2>
       <v-row justify="center">
         <v-checkbox
           v-for="(checkBox, index) in checkBoxes"
@@ -79,7 +73,13 @@
         />
       </v-row>
       <v-row justify="center">
-        <h2 v-if="!editorData.editorType" class="mt-4">새로 입력할 항목의 종류를 선택해주세요</h2>
+        <v-container v-if="!editorData.editorType">
+          <v-row justify="center" align="center">
+            <v-btn color="#CDDC39" @click="contentAddComplete" x-large>
+              <h2 class="display-1">항목 추가 완료</h2>
+            </v-btn>
+          </v-row>
+        </v-container>
         <v-container v-else-if="editorData.editorType==='text'">
           <v-textarea
             outlined
@@ -107,7 +107,15 @@
           </v-row>
         </v-container>
 
-        <pre v-else-if="editorData.editorType==='terminal'"><kbd>$ 입력하기</kbd></pre>
+        <v-container v-else-if="editorData.editorType==='terminal'">
+          <v-textarea
+            class="mt-5"
+            outlined
+            v-model="editorData.terminal"
+            :style="{'fontSize':'25px'}"
+          >$ 입력하기</v-textarea>
+          <v-btn color="info" large @click="editorInput('terminal')">터미널 작성 완료하기</v-btn>
+        </v-container>
       </v-row>
     </v-container>
   </v-container>
@@ -115,7 +123,6 @@
 
 <script>
 import picture from "../../../public/images.png";
-import fs from "fs";
 
 export default {
   methods: {
@@ -130,17 +137,26 @@ export default {
         code: []
       };
     },
+    contentAddComplete: function() {
+      this.$emit("addNewBookContent", this.editorContents);
+    },
     editorInput: function(type) {
       if (type === "newIndex") {
         this.isTitleAdded = true;
-        this.editorData.editorType = null;
       } else if (type === "text") {
         this.editorContents.push({
           type: "text",
           value: this.editorData.text
         });
         this.editorData.text = null;
+      } else if (type === "terminal") {
+        this.editorContents.push({
+          type: "terminal",
+          value: this.editorData.terminal
+        });
+        this.editorData.terminal = null;
       }
+      this.editorData.editorType = null;
     },
     setImage(e) {
       this.editorContents.push({
@@ -148,7 +164,7 @@ export default {
         value: e.target.result
       });
     },
-    removeImage(index) {
+    removeContent(index) {
       this.editorContents = [
         ...this.editorContents.slice(0, index),
         ...this.editorContents.slice(index + 1)
@@ -252,7 +268,7 @@ export default {
 
 <style scoped>
 pre {
-  width: 100%;
+  width: 85%;
   background-color: #cfd8dc;
   border: solid #cfd8dc;
 }
@@ -260,7 +276,7 @@ pre {
 kbd {
   color: black;
   background-color: white;
-  font-size: 20px;
+  font-size: 25px;
 }
 
 .drag,

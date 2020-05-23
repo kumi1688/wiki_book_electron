@@ -40,8 +40,8 @@ export default {
     toTitleLayout: function() {
       this.$store.commit("SAVE_BOOK", null);
       this.$store.commit("SET_DRAWER", false);
-      console.log(this.$router);
-      this.$router.push("/");
+      // console.log(this.$route.path === '/');
+      if (this.$route.path !== "/") this.$router.push("/");
     }
   }
 };

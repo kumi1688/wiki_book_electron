@@ -7,7 +7,12 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="green darken-1" text @click="closeDialog(false)">취소</v-btn>
-          <v-btn color="green darken-1" text @click="closeDialog(true)">{{buttonName}}</v-btn>
+          <v-btn
+            color="green darken-1"
+            text
+            @click="closeDialog(true)"
+            @keyup.enter="closeDialog(true)"
+          >{{buttonName}}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

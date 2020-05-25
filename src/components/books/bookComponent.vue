@@ -28,8 +28,14 @@
           <!-- <h2 v-if="content.type ==='code'">{{readCode(content.value).length}}</h2> -->
           <v-img v-if="content.type === 'img'" :src="getImage(content.value)" />
           <p v-if="content.type ==='text'">{{content.value}}</p>
-
-          <!-- <p v-for="(txt, index) in content.text" :key="index+'E'">{{txt}}</p> -->
+          <v-text-field
+            v-if="content.type ==='file'"
+            solo
+            label="Prepend"
+            prepend-icon="mdi-paperclip"
+            :value="content.fileName"
+            @click="downloadFile(content)"
+          />
         </v-container>
       </v-col>
       <v-col cols="12" md="11">
@@ -90,21 +96,54 @@ export default {
           return "html";
       }
     },
-    getData: function() {
+    getUrl: function() {
       const routerPath = this.$route.params.data.split("/")[0].split("-");
-      const result = fs.readFileSync(
-        path.join(
-          __static,
-          `/books/${routerPath[0]}/${routerPath[1]}/${routerPath[2]}/index.json`
-        )
+      const result = path.join(
+        __static,
+        `/books/${routerPath[0]}/${routerPath[1]}/${routerPath[2]}`
       );
-      this.items = JSON.parse(result);
+
+      return result;
+    },
+    downloadFile: function(content) {
+      // let fileURL = window.URL.createObjectURL(new Blob([response.data]));
+      // console.log(content);
+      const result = fs.readFileSync(`${this.getUrl()}/${content.value}`);
+      let fileURL = window.URL.createObjectURL(new Blob([result]));
+      let fileLink = document.createElement("a");
+
+      fileLink.href = fileURL;
+      fileLink.setAttribute("download", content.fileName);
+      document.body.appendChild(fileLink);
+
+      fileLink.click();
+    },
+    getData: function() {
+      const url = this.getUrl();
+      if (fs.readdirSync(url).includes("index.json")) {
+        console.log("열기");
+        const result = fs.readFileSync(`${url}/index.json`);
+        this.items = JSON.parse(result);
+      } else {
+        console.log("추가");
+        const data = [
+          {
+            title: "내용을 추가해주세요",
+            contents: []
+          }
+        ];
+        fs.writeFileSync(`${url}/index.json`, JSON.stringify(data));
+        this.items = data;
+      }
     },
     addNewBookContent: function(payload) {
       payload.contents = payload.contents.map(content => {
         if (content.rawData) delete content.rawData;
         return content;
       });
+      if (this.items.find(item => item.title === "내용을 추가해주세요")) {
+        this.items = [];
+      }
       this.items = [...this.items, payload];
 
       this.saveBook();
@@ -127,24 +166,29 @@ export default {
       });
     },
     readCode: function(codeName) {
-      const routerPath = this.$route.params.data.split("/")[0].split("-");
-      const data = fs.readFileSync(
-        path.join(
-          __static,
-          `/books/${routerPath[0]}/${routerPath[1]}/${routerPath[2]}/${codeName}`
-        )
-      );
+      // const routerPath = this.$route.params.data.split("/")[0].split("-");
+      // const data = fs.readFileSync(
+      //   path.join(
+      //     __static,
+      //     `/books/${routerPath[0]}/${routerPath[1]}/${routerPath[2]}/${codeName}`
+      //   )
+      // );
+      const url = this.getUrl();
+      const data = fs.readFileSync(`${url}/${codeName}`);
       return data.toString();
     },
     saveBook: function() {
-      const routerPath = this.$route.params.data.split("/")[0].split("-");
-      fs.writeFileSync(
-        path.join(
-          __static,
-          `/books/${routerPath[0]}/${routerPath[1]}/${routerPath[2]}/index.json`
-        ),
-        JSON.stringify(this.items)
-      );
+      // const routerPath = this.$route.params.data.split("/")[0].split("-");
+      // fs.writeFileSync(
+      //   path.join(
+      //     __static,
+      //     `/books/${routerPath[0]}/${routerPath[1]}/${routerPath[2]}/index.json`
+      //   ),
+      //   JSON.stringify(this.items)
+      // );
+      const url = this.getUrl();
+      fs.writeFileSync(`${url}/index.json`, JSON.stringify(this.items));
+      fs.preventDefault();
     }
   }
 };

@@ -3,6 +3,13 @@ module.exports = {
     "vuetify"
   ],
   lintOnSave: false,
+  configureWebpack: {
+    devServer: {
+      watchOptions: {
+        ignored: [/node_modules/, /public/],
+      }
+    }
+  },
   chainWebpack: (config) => {
     config.module
       .rule("raw")

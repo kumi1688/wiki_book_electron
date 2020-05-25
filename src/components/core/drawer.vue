@@ -1,7 +1,7 @@
 
 <template>
   <v-container v-if="!loading">
-    <v-navigation-drawer :value="drawer" :clipped="$vuetify.breakpoint.lgAndUp" app width="350">
+    <v-navigation-drawer :value="drawer" :clipped="$vuetify.breakpoint.lgAndUp" app width="500">
       <v-list dense>
         <!-- :prepend-icon="item.model ? item.icon : item['icon-alt']" -->
         <template v-for="(item,index) in items">
@@ -116,30 +116,10 @@ export default {
   computed: {
     drawer() {
       return this.$store.state.drawer;
+    },
+    book() {
+      return this.$store.state.book;
     }
-  },
-  created: function() {
-    let items = [];
-    const bookName = this.$store.state.book.name;
-    const bookIndexList = this.$store.state.book.indexList;
-    items = bookIndexList.map(bookIndex => {
-      return {
-        icon: "mdi-chevron-up",
-        "icon-alt": "mdi-chevron-down",
-        model: false,
-        name: bookIndex.name,
-        children: bookIndex.subIndex
-          ? bookIndex.subIndex.map((subIndex, i) => {
-              return {
-                name: subIndex.name,
-                to: `/book/${bookName}-${bookIndex.name}-${subIndex.name}`
-              };
-            })
-          : null
-      };
-    });
-    items = this.addPlusIndexButton(items);
-    this.items = items;
   },
   data: function() {
     return {
@@ -154,16 +134,40 @@ export default {
       }
     };
   },
+
   watch: {
-    items: {
+    book: {
       deep: true,
-      handler: function(from, to) {
-        // console.log(from, to);
+      immediate: true,
+      handler: function(to, from) {
+        this.initItems();
       }
     }
   },
-  beforeDestroy: function() {},
   methods: {
+    initItems() {
+      let items = [];
+      const bookName = this.$store.state.book.name;
+      const bookIndexList = this.$store.state.book.indexList;
+      items = bookIndexList.map(bookIndex => {
+        return {
+          icon: "mdi-chevron-up",
+          "icon-alt": "mdi-chevron-down",
+          model: false,
+          name: bookIndex.name,
+          children: bookIndex.subIndex
+            ? bookIndex.subIndex.map((subIndex, i) => {
+                return {
+                  name: subIndex.name,
+                  to: `/book/${bookName}-${bookIndex.name}-${subIndex.name}`
+                };
+              })
+            : null
+        };
+      });
+      items = this.addPlusIndexButton(items);
+      this.items = items;
+    },
     addPlusIndexButton(items) {
       const data = {
         name: "세부 목차 추가하기",
@@ -178,17 +182,34 @@ export default {
       return items;
     },
     removeIndex: function() {
-      this.items = [
-        ...this.items.slice(0, this.editIndex),
-        ...this.items.slice(this.editIndex + 1)
-      ];
+      if (this.editSubIndex === -1) {
+        this.items = [
+          ...this.items.slice(0, this.editIndex),
+          ...this.items.slice(this.editIndex + 1)
+        ];
+      } else {
+        this.items[this.editIndex].children = [
+          ...this.items[this.editIndex].children.slice(0, this.editSubIndex),
+          ...this.items[this.editIndex].children.slice(this.editSubIndex + 1)
+        ];
+      }
     },
     closeDialog: function(payload) {
-      if (payload.value && this.editSubIndex === -1)
+      if (!payload.value) {
+        // 수정하지 않으면 그냥 넘어가기
+      } else if (payload.value && this.editSubIndex === -1) {
+        // 대 목차 수정
+        // this.renameDirectory(this.items[this.editIndex].name, payload.value);
         this.items[this.editIndex].name = payload.value;
-      else
+      } else {
+        // 세부 목차 수정
+        // this.renameDirectory(
+        //   this.items[this.editIndex].children[this.editSubIndex].name,
+        //   payload.value
+        // );
         this.items[this.editIndex].children[this.editSubIndex].name =
           payload.value;
+      }
       this.editIndex = null;
       this.editSubIndex = -1;
       this.editDialog = false;
@@ -213,7 +234,40 @@ export default {
             };
           })
       };
+      this.makeDirectory(data.indexList);
       fs.writeFileSync(`${url}/index.json`, JSON.stringify(data));
+    },
+    renameDirectory: function(oldName, newName) {
+      const bookName = this.$store.state.book.name;
+
+      if (this.editSubIndex === -1) {
+        // index 수정
+        const url = path.join(__static, `/books/${bookName}`);
+        const oldPath = `${url}/${oldName}`;
+        const newPath = `${url}/${newName}`;
+        // if(oldName === '새로운 항목')
+
+        // fs.renameSync(oldPath, newPath);
+      } else {
+        // subindex 수정
+        const url = path.join(__static, `/books/${bookName}`);
+        const oldPath = `${url}/${this.items[this.editIndex].name}/${oldName}`;
+        const newPath = `${url}/${this.items[this.editIndex].name}/${newName}`;
+        fs.renameSync(oldPath, newPath);
+      }
+    },
+    makeDirectory: function(indexList) {
+      const bookName = this.$store.state.book.name;
+      const url = path.join(__static, `/books/${bookName}`);
+      indexList.map(index => {
+        if (!fs.readdirSync(url).includes(index.name))
+          fs.mkdirSync(`${url}/${index.name}`);
+
+        index.subIndex.map(si => {
+          if (!fs.readdirSync(`${url}/${index.name}`).includes(si.name))
+            fs.mkdirSync(`${url}/${index.name}/${si.name}`);
+        });
+      });
     },
     addNewIndex: function() {
       this.items = this.items.concat({
@@ -246,7 +300,7 @@ export default {
         this.addNewSubIndex(index, subIndex);
         return;
       }
-      this.$router.push(child.to);
+      if (this.$route.path !== child.to) this.$router.push(child.to);
     }
   }
 };

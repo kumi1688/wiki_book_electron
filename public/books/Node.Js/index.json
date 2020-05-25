@@ -1,1 +1,26 @@
-{"indexList":[{"name":"Node.Js","subIndex":[{"name":"Node.Js 소개"},{"name":"123"}]},{"name":"Node.Js 실습","subIndex":[{"name":"Node.Js 소개"},{"name":"Node.Js 설치하기"},{"name":"Node.Js 실행"},{"name":"234"}]},{"name":"입문","subIndex":[{"name":"ㄴㄴㄴㄴ"},{"name":"ㄱㄱㄱ"}]}]}
+{
+    "indexList": [
+        {
+            "name": "Node.Js",
+            "subIndex": [
+                {
+                    "name": "Node.Js 소개"
+                }
+            ]
+        },
+        {
+            "name": "Node.Js 실습",
+            "subIndex": [
+                {
+                    "name": "Node.Js 소개"
+                },
+                {
+                    "name": "Node.Js 설치하기"
+                },
+                {
+                    "name": "Node.Js 실행"
+                }
+            ]
+        }
+    ]
+}

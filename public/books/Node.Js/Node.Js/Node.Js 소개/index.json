@@ -1,1 +1,15 @@
-[{"title":"데이터 통신 프로그래밍이란?","contents":[{"type":"text","value":"데이터 통신 프로그래밍은 센서와 모듈에서 수집 한 정보를 미들웨어를 통해 다른 모듈로 전송하는 것을 뜻한다."}]},{"title":"애국가","contents":[{"type":"text","value":"1절\n"},{"type":"img","value":"ce077482-54a6-4482-9ae1-87cec3856662.PNG"}]},{"title":"코드","contents":[{"type":"code","lang":"py","value":"c6b0654d-424a-4fcc-a158-bb11a7779c12.py"}]},{"title":"감사","contents":[{"type":"img","value":"eb9eb7c8-35ad-4031-a9ea-9d5b3626a64a.PNG"},{"type":"img","value":"87546d1c-899a-4a0a-bab2-5964e5eafa3b.PNG"},{"type":"img","value":"6eb05a71-2f6c-4297-942a-12c124db2c89.PNG"},{"type":"code","lang":"py","value":"699f7824-0eca-428b-b379-cf8fca5e8b51.py"},{"type":"text","value":"ㅇㅀㄴㅁㅇㄹㄴㅇㅁㄹㄹ"},{"type":"text","value":"ㄱ쇽쇽쇽숏굑"}]}]
+[
+    {
+        "title": "데이터 통신 프로그래밍이란?",
+        "contents": [
+            {
+                "type": "text",
+                "value": "데이터 통신 프로그래밍은 센서와 모듈에서 수집 한 정보를 미들웨어를 통해 다른 모듈로 전송하는 것을 뜻한다."
+            }
+        ]
+    },
+    {
+        "title": "테스트",
+        "contents": []
+    }
+]

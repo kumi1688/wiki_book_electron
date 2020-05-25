@@ -33,6 +33,11 @@
             height="350"
           />
           <pre v-if="content.type === 'terminal'"><kbd>$ {{content.value}}</kbd></pre>
+          <v-list v-if="content.type === 'file'">
+            <v-list-item>
+              <v-list-item-title>{{content.fileName}}</v-list-item-title>
+            </v-list-item>
+          </v-list>
           <v-col>
             <!-- <v-select
               v-if="content.type === 'code'"
@@ -89,7 +94,11 @@
           />
           <v-btn color="info" large @click="editorInput('text')">텍스트 작성 완료하기</v-btn>
         </v-container>
-        <drop v-else-if="editorData.editorType==='img'" class="drop" @drop="handleDrop">
+        <drop
+          v-else-if="editorData.editorType==='img' || editorData.editorType==='file'"
+          class="drop"
+          @drop="handleDrop"
+        >
           <v-container>
             <h2>파일을 끌어와주세요</h2>
             <v-img :src="picture" />
@@ -128,7 +137,6 @@ import path from "path";
 import { v4 as uuidv4 } from "uuid";
 
 export default {
-  watch: {},
   methods: {
     getLanguage: function(content) {
       // ["javascript", "java", "c_cpp", "python", "html", "json"],
@@ -195,52 +203,65 @@ export default {
       }
       this.editorData.editorType = null;
     },
-    setImage(e) {
+    setImage(e, file) {
       // const prefix = 'data:image/png;base64,'
-      const extension = e.target.result.split(",")[0];
+      // const extension = e.target.result.split(",")[0];
+      const extension = this.getExtention(file.name);
       const data = e.target.result.split(",")[1];
+      const url = this.getUrl();
 
-      const routerPath = this.$route.params.data.split("/")[0].split("-");
-      const url = path.join(
-        __static,
-        `/books/${routerPath[0]}/${routerPath[1]}/${routerPath[2]}`
-      );
-
-      let buff = Buffer.from(e.target.result.split(",")[1], "base64");
+      let buff = Buffer.from(data, "base64");
       const id = uuidv4();
 
-      fs.writeFileSync(`${url}/${id}.PNG`, buff);
+      fs.writeFileSync(`${url}/${id}.${extension}`, buff);
       this.editorContents.push({
         type: "img",
-        value: `${id}.PNG`,
+        value: `${id}.${extension}`,
         rawData: e.target.result
       });
     },
     removeContent(index) {
+      const fileName = this.editorContents[index].value;
+      const contentType = this.editorContents[index].type;
+      const url = this.getUrl();
+
+      if (contentType !== "text" && contentType !== "terminal")
+        fs.unlink(`${url}/${fileName}`, err => {
+          if (err) alert("파일이 존재하지 않습니다");
+        });
       this.editorContents = [
         ...this.editorContents.slice(0, index),
         ...this.editorContents.slice(index + 1)
       ];
     },
-    setCodeDataManually() {
+    getUrl: function() {
+      const routerPath = this.$route.params.data.split("/")[0].split("-");
+      const url = path.join(
+        __static,
+        `/books/${routerPath[0]}/${routerPath[1]}/${routerPath[2]}`
+      );
+      return url;
+    },
+    getExtention: function(fileName) {
+      let extension;
+      if (fileName) extension = fileName.split(".");
+      else extension = this.editorData.fileName.split(".");
+
+      extension = extension[extension.length - 1];
+      return extension;
+    },
+    setCodeDataManually: function() {
       this.editorContents.push({
         type: "code",
         lang: "javascript",
         value: ""
       });
     },
-    setCodeData(e) {
-      console.log(e.target.result);
-      let extension = this.editorData.fileName.split(".");
-      extension = extension[extension.length - 1];
-
-      const routerPath = this.$route.params.data.split("/")[0].split("-");
-      const url = path.join(
-        __static,
-        `/books/${routerPath[0]}/${routerPath[1]}/${routerPath[2]}`
-      );
-
+    setCodeData(e, file) {
+      const url = this.getUrl();
+      const extension = this.getExtention(file.name);
       const id = uuidv4();
+
       fs.writeFileSync(`${url}/${id}.${extension}`, e.target.result);
 
       this.editorContents.push({
@@ -250,21 +271,53 @@ export default {
         rawData: e.target.result
       });
     },
+    setFileData(e, file) {
+      const extension = this.getExtention(file.name);
+      const url = this.getUrl();
+      const id = uuidv4();
+
+      const data = e.target.result.split(",")[1];
+      let buff = Buffer.from(data, "base64");
+      fs.writeFileSync(`${url}/${id}.${extension}`, buff);
+
+      this.editorContents.push({
+        type: "file",
+        value: `${id}.${extension}`,
+        fileName: file.name
+      });
+    },
     readFile(file) {
       // `file.name` 형태의 확장자 규칙에 주의하세요
       if (/\.(jpe?g|png|gif)$/i.test(file.name)) {
         const reader = new FileReader();
 
         this.editorData.fileName = file.name;
-        reader.onload = this.setImage;
+        reader.onload = (function(file, cb) {
+          return function(e) {
+            cb(e, file);
+          };
+        })(file, this.setImage);
+
         reader.readAsDataURL(file);
-      } else if (/\.(py|js|json|txt|c|cpp)$/i.test(file.name)) {
+      } else if (/\.(py|js|json|txt|c|cpp|html)$/i.test(file.name)) {
         const reader = new FileReader();
 
-        console.log(file);
-        this.editorData.fileName = file.name;
-        reader.onload = this.setCodeData;
+        // this.editorData.fileName = file.name;
+        reader.onload = (function(file, cb) {
+          return function(e) {
+            cb(e, file);
+          };
+        })(file, this.setCodeData);
         reader.readAsText(file);
+      } else if (/\.(pdf|hwp|docx|doc|zip|egg)$/i.test(file.name)) {
+        const reader = new FileReader();
+
+        reader.onload = (function(file, cb) {
+          return function(e) {
+            cb(e, file);
+          };
+        })(file, this.setFileData);
+        reader.readAsDataURL(file);
       } else alert("지원되지 않는 파일 형식입니다");
     },
     handleDrop(data, event) {
@@ -312,7 +365,8 @@ export default {
         { label: "텍스트", value: "text" },
         { label: "이미지", value: "img" },
         { label: "코드", value: "code" },
-        { label: "터미널", value: "terminal" }
+        { label: "터미널", value: "terminal" },
+        { label: "파일", value: "file" }
       ],
       langs: ["javascript", "java", "c_cpp", "python", "html", "json"],
       editorContents: [],
